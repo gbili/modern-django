@@ -3,7 +3,7 @@ import os
 import sys
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local") # added by g : .local the project will use the correct settings for local delvelopment
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

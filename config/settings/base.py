@@ -10,35 +10,59 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
-import os
+import environ
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# comment by g BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# added by g : ROOT_DIR points to modern-django dir (root of project)
+ROOT_DIR = environ.Path(__file__) - 3
+# added by g : points applications dir
+APPS_DIR = ROOT_DIR.path('project')
+
+# function that finds a .env file in the project root then read_env() to make use of them
+env = environ.Env()
+
+# This section added from an update to standards CookieCutter Django to ensure no errors are encountered at runserver/migrations 
+# Now when useing Docker containers, we will be reading environement variables from the .env file, as there are some complications with doing so in Docker.
+READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=False)
+
+if READ_DOT_ENV_FILE : 
+    env_file = str(ROOT_DIR.path('.env'))
+    print('Loading : {}'.format(env_file))
+    env.read_env(env_file)
+    print('The .env file has been loaded. See base.py for more information')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'm^rk@ud(8b$y(b-p2ks#&s%@t3fe^pvg_&47gq7vxxq^@87w@v'
+# by g : removed secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = env.bool('DJANGO_DEBUG', False)
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-]
+)
 
+THIRD_PARTY_APPS = (
+)
+
+LOCAL_APPS = (
+)
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+# added by g : the order of MIDDLEWARE elements matters
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -67,6 +91,7 @@ TEMPLATES = [
     },
 ]
 
+# Web Server GAteway Interface : It is a standard for python webframewors that point a server at an application
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
@@ -76,10 +101,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': str(ROOT_DIR.path('db.sqlite3')),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -117,4 +141,23 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+# where the collected static files will ne placed
 STATIC_URL = '/static/'
+
+STATIC_ROOT = str(ROOT_DIR('staticfiles'))
+
+# folders Django will look for static files ins
+STATICFILES_DIRS = (
+    str(APPS_DIR.path('static')),
+)
+
+STATICFILES_FINDER = (
+   'django.contrib.staticfiles.finders.FilSystemFinder',
+   'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
+# Url appended to the root url to serve media data
+MEDIA_URL = '/media/'
+
+# where the collected media files will be store
+MEDIA_ROOT = str(APPS_DIR('media'))
